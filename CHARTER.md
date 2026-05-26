@@ -5,23 +5,24 @@
 **Owner team:** Mary Krouse
 
 **Owner Product Lead:** Mary Krouse
+
 **Peer Stakeholder POs:** Emery Kerani,	Dylan Ray,	Sarah Alhusaynat	
 
 **Instructor / Sponsor:** Lucas Cordova (`LucasCordova` on GitHub)
 
-**GitHub repo:** <link to this repo>
+**GitHub repo:** https://github.com/MaryR0se/Mary-Krouse-Capstone-Repo
 
-**GitHub Projects board:** <link>
+**GitHub Projects board:** https://github.com/users/MaryR0se/projects/1/views/1
 
-**Discord category:** `#<project>-*`
+**Discord category:** `Project 18: Mary`
 
-**Studio Session:** <1, 2, or 3>
+**Studio Session:** 2
 
-**Studio formed:** <date>
+**Studio formed:** 5-25-2026
 
 ## Vision
 
-One or two sentences. The world (or organization, or domain) if this project succeeds.
+The broader domain is social justice, with a focus on LGBTQ+ mainly, as well as autism/disability secondarily.
 
 ## Mission
 
