@@ -6,9 +6,9 @@
 
 | Field | Value |
 |-------|-------|
-| Owner team | <names> |
-| Owner Product Lead | <name> |
-| Peer Stakeholder POs | <names of your 2 or 3 peer PO individuals> |
+| Owner team | Mary Rose Krouse |
+| Owner Product Lead | Mary Rose Krouse |
+| Peer Stakeholder POs |  |
 | Studio Session | <1, 2, or 3> |
 | GitHub repo | <link to this repo> |
 | GitHub Projects board | <link> |
