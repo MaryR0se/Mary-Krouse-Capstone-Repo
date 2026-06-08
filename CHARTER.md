@@ -22,7 +22,11 @@
 
 ## Vision
 
-The broader domain is social justice, with a focus on LGBTQ+ mainly, as well as autism/disability secondarily.
+Theme: Social justice and identity through text and disparity analysis
+
+Research Questions: What proportion of the Furry fandom hold identities under the LGBTQ+ umbrella? Could individual unfavorable or ignorant sentiments toward furries be associated with unfavorable or ignorant sentiments toward LGBTQ+ people?
+
+Project: Investigate my research questions through data analysis and machine learning and present my findings with an emphasis on artistic data visualization.
 
 ## Mission
 
@@ -30,8 +34,10 @@ One or two sentences. What the owner team will actually do this semester.
 
 ## Context
 
-- **Users / affected parties:** who benefits, who is at risk, who might use the result.
-- **Data sources (proposed):** named sources, access status, license / ethics notes.
+- **Users / affected parties:** My research question is of interest to the Furry fan community more narrowly, as well as advocates of the LGBTQ+ community more broadly, as a case study of “homophobia in disguise.” Any findings will of course carry value in the interest of the Furry niche specifically, but I would like to direct the focus away slightly from Furry itself, in favor of its association with larger and more vulnerable groups as much as possible. 
+- **Data sources (proposed):**
+  1. 2023 survey on furries by the International Anthropomorphic Research Project
+  2. 
 - **Constraints:** time, compute, access, skills, scope.
 - **Ethics risks:** consent, retention, PII, fairness, deployment risk.
 
