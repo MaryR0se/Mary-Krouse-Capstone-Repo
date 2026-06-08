@@ -37,9 +37,9 @@ One or two sentences. What the owner team will actually do this semester.
 - **Users / affected parties:** My research question is of interest to the Furry fan community more narrowly, as well as advocates of the LGBTQ+ community more broadly, as a case study of “homophobia in disguise.” Any findings will of course carry value in the interest of the Furry niche specifically, but I would like to direct the focus away slightly from Furry itself, in favor of its association with larger and more vulnerable groups as much as possible. 
 - **Data sources (proposed):**
   1. 2023 survey on furries by the International Anthropomorphic Research Project
-  2. 
-- **Constraints:** time, compute, access, skills, scope.
-- **Ethics risks:** consent, retention, PII, fairness, deployment risk.
+  2. Self-conducted survey
+- **Constraints:** I'm a team of one with big ideas and only so much time. Otherwise, none.
+- **Ethics risks:** Given that I will be soliciting data from live human respondents, I need to be very intentional about informed consent. At the beginning of my questionnaire (in the form of a Google Form), will be a page including a description of risks and intended data usage, requiring respondents to confirm consent, as well as confirming their age as 18 or older.
 
 ## Success criteria by milestone
 
