@@ -1,10 +1,10 @@
-Week 6 Proposal Critique - Dylan Ray
+Week 6 Proposal Critiques - Dylan Ray
 
 Strong points:
 
 - Very thorough and aware of the ethical side, and understanding how personal to give personal information to a survey. 
 - Both data sources, one from the website and another run by you, are greatly related to answering the research question
-- Agree that the visual using a poster is the best way to present your findings to the general audience
+- Agree that the visuals using a poster is the best way to present your findings to the general audience, which aligns for this Capstone Project
 - The data engineering plan seems reasonable to do during the timeline
 
 
