@@ -1,0 +1,424 @@
+---
+title: "Transform Data"
+author: "Mary Krouse"
+date: "2026-06-29"
+output: html_document
+---
+
+# Setup & Imports
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(textclean)
+```
+
+```{r}
+answers_raw <- read_csv("answers-6-29.csv")
+```
+
+## Respondent table
+
+Just a series from 1 to the number of respondents. I can imagine this being useful if any respondents respond to 0 of the questions. Thus far, at least one such respondent exists.
+
+```{r}
+table_respondents = tibble(respondent_id = 1:nrow(answers_raw))
+table_respondents
+```
+
+```{r}
+write_csv(table_respondents, 
+          "table_respondents.csv")
+```
+
+# Tables relating to answers
+
+## Questions table
+
+```{r}
+question_id <- c(
+  # Furry unfavorability
+  "Furry-01", "Furry-02", "Furry-03", "Furry-04", "Furry-05",
+  "Furry-06", "Furry-07", "Furry-08", "Furry-09", "Furry-10",
+  "Furry-11", "Furry-12", "Furry-13", "Furry-14", "Furry-15",
+  "Furry-16", "Furry-17", "Furry-18", "Furry-19", "Furry-20",
+  "Furry-21", "Furry-22", "Furry-23", "Furry-24",
+  
+  # Homophobia
+  "Homop-01", "Homop-02", "Homop-03", "Homop-04", "Homop-05",
+  "Homop-06", "Homop-07", "Homop-08", "Homop-09", "Homop-10",
+  "Homop-11", "Homop-12", "Homop-13", "Homop-14", "Homop-15",
+  "Homop-16", "Homop-17", "Homop-18", "Homop-19", "Homop-20",
+  
+  # Transphobia
+  "Trans-01", "Trans-02", "Trans-03", "Trans-04", "Trans-05",
+  "Trans-06", "Trans-07", "Trans-08", "Trans-09", "Trans-10",
+  "Trans-11", "Trans-12", "Trans-13", "Trans-14", "Trans-15",
+  "Trans-16", "Trans-17", "Trans-18", "Trans-19", "Trans-20",
+  "Trans-21", "Trans-22",
+  
+  # Estimated percent of furries LGBTQ+
+  "Perc_guess",
+  
+  # I consider myself or identify as ____
+  "Furry_id", "Heterosexual_id", "Transgender+_id", 
+  "Homophobic_id", "Transphobic_id", 
+  
+  # More respondent info
+  "Politics", "Location", "Medium"
+)
+
+question_text <- colnames(answers_raw)[-(1:2)]
+
+category_number <- c(
+  rep(1, times = 24), # 1: Furry unfavorability assessment
+  rep(2, times = 20), # 2: Homophobia assessment
+  rep(3, times = 22), # 3: Transphobia assessment
+  4,                  # 4: Percentage furries LGBTQ+ guess
+  rep(5, times = 5),  # 5: Self-identifies as...
+  6,                  # 6: Self-described politics
+  7,                  # 7: Location where survey was found
+  8                   # 8: On what the link to the survey was found
+)
+
+table_questions <- tibble(
+  question_id = question_id,
+  question_text = question_text,
+  category_number = category_number
+) %>%
+
+  # Curly quotes were causing issues when copying into SQL
+  mutate(question_text = str_replace_all(question_text, "[“”‘’]", "'"))
+
+table_questions
+```
+
+```{r}
+write_csv(table_questions, 
+          "table_questions.csv")
+```
+
+## Question Category Lookup table
+
+```{r}
+category_text = c(
+  "Furry unfavorability assessment",
+  "Homophobia assessment",
+  "Transphobia assessment",
+  "Percentage furries LGBTQ+ guess",
+  "Self-identifies as...",
+  "Self-described politics",
+  "Location where survey was found",
+  "On what the link to the survey was found"
+)
+
+table_category_lookup = tibble(
+  category_number = 1:length(category_text),
+  category_text = category_text
+)
+
+table_category_lookup
+```
+
+```{r}
+write_csv(table_category_lookup, 
+          "table_category_lookup.csv")
+```
+
+## Answer Lookup table
+
+```{r}
+table_answer_lookup = tribble(
+  ~category_number, ~answer_number, ~answer_text,
+  
+  # 1: Furry unfavorability assessment
+  1, 1, "Strongly agree",
+  1, 2, "Agree",
+  1, 3, "Neither agree nor disagree",
+  1, 4, "Disagree",
+  1, 5, "Strongly disagree",
+  
+  # 2: Homophobia assessment
+  2, 1, "Strongly agree",
+  2, 2, "Agree",
+  2, 3, "Neither agree nor disagree",
+  2, 4, "Disagree",
+  2, 5, "Strongly disagree",
+  
+  # 3: Transphobia assessment
+  3, 1, "Strongly agree",
+  3, 2, "Agree",
+  3, 3, "Neither agree nor disagree",
+  3, 4, "Disagree",
+  3, 5, "Strongly disagree",
+  
+  # 4: Percentage furries LGBTQ+ guess
+  4, 1, "0%-10%",
+  4, 2, "10%-20%",
+  4, 3, "20%-30%",
+  4, 4, "30%-40%",
+  4, 5, "40%-50%",
+  4, 6, "50%-60%",
+  4, 7, "60%-70%",
+  4, 8, "70%-80%",
+  4, 9, "80%-90%",
+  4, 10, "90%-100%",
+  
+  # 5: Self-identifies as...
+  5, 1, "Agree",
+  5, 2, "Disagree",
+  5, 3, "Unsure",
+  
+  # 6: Self-described politics
+  6, 1, "Far left",
+  6, 2, "Moderate left",
+  6, 3, "Center",
+  6, 4, "Moderate right",
+  6, 5, "Far right",
+  
+  # 7: Location where survey was found
+  7, 1, "At the Salem Saturday Market (Salem, OR)",
+  7, 2, "At the Vashon Island Strawberry Festival (Vashon, WA)", 
+  7, 3, "Downtown Salem or Minto Brown Park", 
+  7, 4, "Online or sent to me, and I'm taking this survey from within the United States", 
+  7, 5, "Online or sent to me, and I'm taking this survey from outside the United States", 
+  7, 6, "None of the above", 
+  
+  # 8: On what the link to the survey was found
+  8, 1, "On a tee shirt worn by a student", 
+  8, 2, "On a tee shirt worn by a student in a furry costume", 
+  8, 3, "On a poster", 
+  8, 4, "On a Reddit post", 
+  8, 5, "On a LinkedIn post", 
+  8, 6, "Sent to me by someone", 
+  8, 7, "On SurveySwap.io", 
+  8, 8, "None of the above" 
+)
+
+table_answer_lookup
+```
+
+```{r}
+write_csv(table_answer_lookup, 
+          "table_answer_lookup.csv")
+```
+
+## Respondent-Question-Answer table
+
+```{r}
+table_respondent_question_answer <- answers_raw %>%
+  
+  # Remove unneeded columns
+  select(-(1:2)) %>%
+  
+  # Pivot to long (with index as identifier column)
+  rowid_to_column("respondent_id") %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(
+    cols = -respondent_id,
+    names_to = "question_text",
+    values_to = "answer_number"
+  ) %>%
+  
+  # Replace question text with question ID
+  left_join(table_questions, by = "question_text") %>%
+  select(-question_text) %>%
+  
+  # Correct text answers that should be answer numbers (beyond category 3)
+  left_join(
+    table_answer_lookup,
+    by = c(
+      "category_number" = "category_number",
+      "answer_number" = "answer_text"
+    )) %>%
+  mutate(
+    final_answer_id = case_when(
+      category_number %in% 1:3 ~ as.integer(answer_number),
+      TRUE ~ as.integer(answer_number.y)
+    )) %>%
+  
+  # Delete excess columns
+  select(
+    -answer_number, 
+    -answer_number.y,
+    -category_number
+  ) %>%
+  rename(answer_number = final_answer_id)
+
+table_respondent_question_answer
+```
+
+```{r}
+write_csv(table_respondent_question_answer, 
+          "table_respondent_question_answer.csv")
+```
+
+# Table for cleaned raw data with favorability scores
+
+Function for calculating favorability score
+
+```{r}
+compute_scale_score <- function(
+    df, prefix, exclude_indices = NULL, reverse_indices = NULL) {
+  
+  # Select specified question category (by prefix)
+  cols <- select(df, starts_with(prefix))
+  
+  # Build a matrix of values for row-wise operations
+  vals <- as.matrix(as.data.frame(cols))
+  
+  # Remove excluded columns first
+  if (!is.null(exclude_indices)) {
+    vals <- vals[, -exclude_indices, drop = FALSE]
+    
+    # Shift over indices to replace removed columns
+    adjusted_reverse <- sapply(reverse_indices, function(idx) {
+      idx - sum(exclude_indices < idx)
+    })
+    reverse_indices <- adjusted_reverse
+  }
+  
+  # Reverse score specified items: -x + 6
+  if (!is.null(reverse_indices)) {
+    vals[, reverse_indices] <- -vals[, reverse_indices] + 6
+  }
+  
+  # Compute row means, ignoring NAs
+  means = rowMeans(vals, na.rm = TRUE)
+  
+  # Reverse once again to match up with favorability score categories
+  -means + 6
+}
+```
+
+Thresholds for favorability category assignment by raw score
+
+```{r}
+# Category 1, Highly favorable : [1 - t1)
+t1 = 1.5
+# Category 2, Moderately favorable : [t1 - t2)
+t2 = 2.5
+# Category 3, Ambivalent or neutral : [t2 - t3)
+t3 = 3.5
+# Category 4, Unfavorable : [t3 - 5]
+```
+
+```{r}
+answers <- answers_raw %>%
+  # Remove unneeded columns
+  # - 1: Timestamp of response submission (anonymity concerns)
+  # - 2: Agreement to consent form (same value for all)
+  select(-(1:2)) %>%
+  
+  # Rename columns to question names
+  rename_with(~question_id) %>%
+  
+  # Get raw favorability scores
+  mutate(
+    Furry_unfavorability_raw = compute_scale_score(
+      ., 
+      prefix = "Furry-",
+      exclude_indices = c(1, 2, 3, 4),
+      reverse_indices = c(5, 10, 16, 19, 21)
+    ) * -1 + 6,
+    Homophobia_raw = compute_scale_score(
+      .,
+      prefix = "Homop-",
+      exclude_indices = NULL,
+      reverse_indices = c(5, 10, 15, 16)
+    ) * -1 + 6,
+    Transphobia_raw = compute_scale_score(
+      .,
+      prefix = "Trans-",
+      exclude_indices = NULL,
+      reverse_indices = c(1, 2, 5, 6, 8, 9, 10, 11, 21)
+    )) %>%
+  
+  mutate(
+    Furry_unfavorability_cat = as_factor(case_when(
+      Furry_unfavorability_raw < t1 ~ 1,
+      Furry_unfavorability_raw < t2 ~ 2,
+      Furry_unfavorability_raw < t3 ~ 3,
+      Furry_unfavorability_raw >= t3 ~ 4
+    )),
+    
+    Homophobia_cat = as_factor(case_when(
+      Homophobia_raw < t1 ~ 1,
+      Homophobia_raw < t2 ~ 2,
+      Homophobia_raw < t3 ~ 3,
+      Homophobia_raw >= t3 ~ 4
+    )),
+    
+    Transphobia_cat = as_factor(case_when(
+      Transphobia_raw < t1 ~ 1,
+      Transphobia_raw < t2 ~ 2,
+      Transphobia_raw < t3 ~ 3,
+      Transphobia_raw >= t3 ~ 4
+    )))
+
+answers
+```
+
+```{r}
+write_csv(answers, 
+          "answers_clean.csv")
+```
+
+# Tables relating to favorability scores
+
+## Favorability Lookup table
+
+```{r}
+fav_description = c(
+  "Highly favorable",
+  "Moderately favorable",
+  "Ambivalent or neutral",
+  "Unfavorable"
+)
+
+table_favorability_lookup <- tibble(
+  fav_number = 1:length(fav_description),
+  fav_description = fav_description
+)
+
+table_favorability_lookup
+```
+
+```{r}
+write_csv(table_favorability_lookup, 
+          "table_favorability_lookup.csv")
+```
+
+## Respondent Favorability table
+
+```{r}
+table_respondent_favorability <- answers %>%
+  # Isolate favorability score columns
+  rowid_to_column("respondent_id") %>%
+  select(
+    respondent_id,
+    Furry_unfavorability_cat,
+    Homophobia_cat,
+    Transphobia_cat
+  ) %>%
+  
+  # Pivot long with names of groups and favorability toward each
+  rename(
+    Furry = Furry_unfavorability_cat,
+    Gay = Homophobia_cat,
+    Trans = Transphobia_cat
+  ) %>%
+  pivot_longer(
+    cols = -respondent_id,
+    names_to = "towards_group",
+    values_to = "fav_number"
+  )
+
+table_respondent_favorability
+```
+
+```{r}
+write_csv(table_respondent_favorability, 
+          "table_respondent_favorability.csv")
+```
