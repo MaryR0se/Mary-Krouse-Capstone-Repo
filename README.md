@@ -25,3 +25,10 @@
 ## How this project runs (DS3 in one paragraph)
 
 This project is run as a **DS3 studio**: the owner team is paired with two or three **peer Stakeholder POs** drawn from adjacent capstone projects. As needed, the peer POs file a **Studio Brief** for the next iteration and a **Studio Critique** of the last iteration. The owner team commits an **Iteration Review** here in `README.md` before each class. See the [Studio Session weekly ritual](https://courses.lpcordova.phd/data510/project-framework/weekly-ritual.html) for the cadence and [Studio Charter](https://courses.lpcordova.phd/data510/project-framework/charter-inception.html) for the inception session.
+
+## See also
+
+[Grafana dashboard](https://grafana-production-2897.up.railway.app/public-dashboards/a876380c72144892aec29e88e5027e8e)
+
+[Google Forms dummy survey](https://forms.gle/29d76u3jR2sXegA3A)
+
