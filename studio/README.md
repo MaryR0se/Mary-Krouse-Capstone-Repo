@@ -1,10 +1,10 @@
 # Studio artifacts
 
-This folder holds the two written artifacts that the **triad** (owner team + peer POs) files every week.
+This folder holds the two written artifacts that the **triad** (owner team + peer POs) files as needed.
 
 ## `briefs/`
 
-One **Studio Brief** per peer PO per week.
+**Studio Briefs**
 
 - **Filed by:** the peer Stakeholder PO
 - **For:** the owner team to consider before planning the next iteration
@@ -14,7 +14,7 @@ One **Studio Brief** per peer PO per week.
 
 ## `critiques/`
 
-One **Studio Critique** per peer PO per week.
+**Studio Critiques**
 
 - **Filed by:** the peer Stakeholder PO
 - **For:** the owner team, after they post the Iteration Review for the prior iteration
