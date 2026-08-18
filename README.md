@@ -1,6 +1,5 @@
-# <Project Name>
-
-> One-sentence description of what this project is about. Replace this entire block before week 3.
+# Thoughts on Furries?
+## *LGBTQ+ phobia can hide in some strange places…*
 
 ## Quick reference
 
@@ -8,9 +7,9 @@
 |-------|-------|
 | Owner team | Mary Rose Krouse |
 | Owner Product Lead | Mary Rose Krouse |
-| Peer Stakeholder POs |  |
-| Studio Session | <1, 2, or 3> |
-| GitHub repo | <link to this repo> |
+| Peer Stakeholder POs | Emery Kerani, Dylan Ray, Sarah Alhusaynat |
+| Studio Session | 2 |
+| GitHub repo | https://github.com/MaryR0se/Mary-Krouse-Capstone-Repo |
 | GitHub Projects board | <link> |
 | Discord category | `#<project>-*` |
 | Instructor / Sponsor | Lucas Cordova (`LucasCordova` on GitHub) |
