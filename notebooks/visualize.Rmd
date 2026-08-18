@@ -1,0 +1,747 @@
+---
+title: "Visualize!"
+author: "Mary Krouse"
+date: "2026-07-27"
+output: html_document
+---
+
+# Setup
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(showtext)
+library(dplyr)
+library(pspearman)
+```
+
+```{r}
+survey <- read_csv("answers_clean.csv") %>%
+  mutate(
+    Politics = fct_relevel(
+      Politics, 
+      "Far left", "Moderate left", "Center",
+      "Moderate right", "Far right"
+    ),
+    Location = case_match(
+      Location, 
+      "Online or sent to me, and I'm taking this survey from within the United States" ~ "Online within US",
+    "Online or sent to me, and I'm taking this survey from outside the United States" ~ "Online outside US"
+    .default = Location
+  )
+)
+```
+
+## Contents
+
+Intersecting Favorability Distributions (2)
+- proportions of furry favorability for each bucket of trans/gay favorability
+- color gradient to represent proportion
+- hue to represent topic
+
+Prediction Heatmap (1)
+- proportions of predicted furry favorability for each bucket of true furry favorability
+- color gradient to represent correctness vs incorrectness
+- highlighting to represent correctness
+
+Favorability Score Distributions (3)
+- distributions of each favorability score topic
+- height to represent count
+- hue to represent topic
+
+Question Distributions (66 + 9)
+- distributions of each question
+- height to represent count
+
+Raw Favorability Distributions (3)
+- distributions of raw favorability scores before categorical aggregation for each topic
+- height to represent density
+- hue to represent topic
+
+## Universal Variables
+
+```{r}
+# image resolution
+
+my_dpi = 600
+
+# fonts
+
+font_add_google("Roboto Slab", "roboto_slab")
+showtext_auto()
+showtext_opts(dpi = my_dpi)
+
+# colors
+
+yellow = "#FFC532"
+green = "#65CB4B"
+cyan = "#00C6AC"
+
+pink = "#FF7E75"
+pink_mild = "#F8A19B"
+pink_soft = "#F0C3C0"
+pink_faint = "#FAEBEA"
+pink_dark = "#B30300"
+
+lo_prop = "#FAFAFA"
+
+pink_hi_prop = "#FC6055"
+pink_hi_prop_txt = pink_dark
+pink_lo_prop_text = "#DEAAA6"
+
+green_hi_prop = "#38B515"
+green_hi_prop_txt = "#186B00"
+green_lo_prop_text = "#97BA8B"
+
+cyan_hi_prop = "#00A891"
+cyan_hi_prop_txt = "#005E50"
+cyan_lo_prop_text = "#85B2AB"
+
+# theme
+
+my_theme <- theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "transparent", colour = NA), 
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    legend.position = "none",
+    axis.text.x = element_text(
+      size = 8, hjust = 0.5, color = pink_dark, family = "roboto_slab"
+    ),
+    axis.text.y = element_text(
+      size = 8, hjust = 0.5, color = pink_dark, family = "roboto_slab"
+    ),
+    axis.title.x = element_text(
+      face = "bold", size = 10, vjust = -3, color = pink, family = "Arial"
+    ),
+    axis.title.y = element_text(
+      face = "bold", size = 10, vjust = 3, color = pink, family = "Arial"
+    ),
+    plot.margin = margin(
+      b = 20, l = 20
+    ),
+    plot.title = element_text(
+      size = 15, color = pink, face = "bold", margin = margin(t = 10), 
+      family = "Arial Black"
+    )
+  )
+
+```
+
+
+# Intersecting Favorability Distributions
+
+```{r}
+favorability_levels = c(
+    "Highly\nFavorable",
+    "Moderately\nFavorable",
+    "Ambivalent\nor Neutral",
+    "Unfavorable"
+  )
+```
+
+## Wrangle
+
+Gender Identity
+
+```{r}
+heat_trans <- survey %>%
+  drop_na(Transphobia_cat, Furry_unfavorability_cat) %>%
+  mutate(across(
+    c(Transphobia_cat, Furry_unfavorability_cat), 
+    \(x) factor(case_match(
+      x,
+      1 ~ favorability_levels[1],
+      2 ~ favorability_levels[2],
+      3 ~ favorability_levels[3],
+      4 ~ favorability_levels[4]
+    ),
+    levels = favorability_levels,
+    ordered = TRUE)
+  )) %>% 
+  count(Transphobia_cat, Furry_unfavorability_cat, 
+        name = "Count",
+        .drop = FALSE) %>% 
+  group_by(Transphobia_cat) %>% 
+  mutate(Proportion = Count / sum(Count)) %>%
+  rename(
+    `Attitude on Gender Identity` = Transphobia_cat,
+    `Attitude on Furries` = Furry_unfavorability_cat
+  )
+
+heat_trans
+```
+
+Sexual Orientation
+
+```{r}
+heat_gay <- survey %>%
+  drop_na(Homophobia_cat, Furry_unfavorability_cat) %>%
+  mutate(across(
+    c(Homophobia_cat, Furry_unfavorability_cat), 
+    \(x) factor(case_match(
+      x,
+      1 ~ favorability_levels[1],
+      2 ~ favorability_levels[2],
+      3 ~ favorability_levels[3],
+      4 ~ favorability_levels[4]
+    ),
+    levels = favorability_levels,
+    ordered = TRUE)
+  )) %>% 
+  count(Homophobia_cat, Furry_unfavorability_cat, 
+        name = "Count",
+        .drop = FALSE) %>% 
+  group_by(Homophobia_cat) %>% 
+  mutate(Proportion = Count / sum(Count)) %>%
+  rename(
+    `Attitude on Sexual Orientation` = Homophobia_cat,
+    `Attitude on Furries` = Furry_unfavorability_cat
+  )
+
+heat_gay
+```
+
+## Scrapped: Faceted Histograms
+
+Demonstrated over gender identity
+
+```{r}
+enclosure_rectangles <- tibble(
+  bottom = unique(survey$Furry_unfavorability_cat) - 0.25,
+  top = unique(survey$Furry_unfavorability_cat) + 0.65
+) %>%
+  drop_na()
+```
+
+```{r}
+heat_trans %>%
+  ggplot(aes(
+    x = `Attitude on Furries`,
+    y = `Attitude on Gender Identity`
+  )) +
+  
+  # enclosure
+  geom_rect(
+    data = enclosure_rectangles, 
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = bottom,
+      ymax = top
+    ), 
+    fill = pink_faint,
+    inherit.aes = FALSE
+    ) +
+  
+  geom_rect(
+    aes(
+      xmin = as.numeric(`Attitude on Furries`),
+      xmax = as.numeric(`Attitude on Furries`) + 1,
+      ymin = as.numeric(`Attitude on Gender Identity`),
+      ymax = as.numeric(`Attitude on Gender Identity`) + Proportion
+    ), fill = pink) +
+  
+  geom_text(
+    aes(
+      label = paste0(round(Proportion * 100, digits = 0), "%")),
+    nudge_y = -0.2, 
+    hjust = 0, vjust = 0, 
+    color = pink_mild,
+    fontface = "bold", size = 2
+  ) +
+  
+  labs(
+    title = "Title"
+  ) +
+  
+  coord_cartesian(xlim = c(1.5, 4.5)) +
+  
+  my_theme +
+  theme(
+    axis.text.y = element_text(vjust = 0, hjust = 0),
+    axis.text.x = element_text(hjust = 0),
+    plot.margin = margin(l = 20, b = 20, r = 30)
+  )
+```
+
+```{r}
+ggsave("scrapped_hist.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+## vs. Gender Identity
+
+Correlation coefficient
+
+```{r}
+spearman.test(survey$Furry_unfavorability_cat, survey$Transphobia_cat)
+```
+
+```{r}
+heat_trans %>%
+  ggplot(aes(
+    `Attitude on Gender Identity`,
+    `Attitude on Furries`,
+    fill = Proportion
+  )) +
+  geom_tile(aes(width = 0.8)) +
+  geom_text(
+    aes(
+      color = Proportion,
+      label = paste0(round(Proportion * 100, digits = 0), "%")),
+    nudge_x = -0.35, hjust = 0, fontface = "bold", size = 3
+  ) +
+  
+  labs(
+    title = "Trans Favorability vs Furry Favorability"
+  ) +
+  
+  scale_fill_gradient(low = lo_prop, high = cyan_hi_prop) +
+  scale_color_gradient(low = cyan_lo_prop_text, high = cyan_hi_prop_txt) +
+  
+  my_theme +
+  theme(
+    plot.title = element_text(color = cyan, size = 10),
+    axis.title.x = element_text(color = cyan)
+  )
+```
+
+```{r}
+ggsave("vs_gender.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+## vs. Sexual Orientation
+
+Correlation coefficient
+
+```{r}
+spearman.test(survey$Furry_unfavorability_cat, survey$Homophobia_cat)
+```
+
+```{r}
+heat_gay %>%
+  ggplot(aes(
+    `Attitude on Sexual Orientation`,
+    `Attitude on Furries`,
+    fill = Proportion
+  )) +
+  geom_tile(aes(width = 0.8)) +
+  geom_text(
+    aes(
+      color = Proportion,
+      label = paste0(round(Proportion * 100, digits = 0), "%")),
+    nudge_x = -0.35, hjust = 0, fontface = "bold", size = 3
+  ) +
+  
+  labs(
+    title = "Gay Favorability vs Furry Favorability"
+  ) +
+  
+  scale_fill_gradient(low = lo_prop, high = green_hi_prop) +
+  scale_color_gradient(low = green_lo_prop_text, high = green_hi_prop_txt) +
+  
+  my_theme +
+  theme(
+    plot.title = element_text(color = green, size = 10),
+    axis.title.x = element_text(color = green)
+  )
+```
+
+```{r}
+ggsave("vs_orient.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+# Prediction Heatmap
+
+## Wrangle
+
+```{r}
+predictions <- read_csv("predictions.csv") %>%
+  mutate(across(
+    c(Actual, Predicted), 
+    \(x) factor(case_match(
+      x,
+      1 ~ favorability_levels[1],
+      2 ~ favorability_levels[2],
+      3 ~ favorability_levels[3],
+      4 ~ favorability_levels[4]
+    ),
+    levels = favorability_levels,
+    ordered = TRUE)
+  )) %>% 
+  count(Actual, Predicted, 
+        name = "Count",
+        .drop = FALSE) %>% 
+  complete(Actual, Predicted, fill = list(Count = 0)) %>%
+  group_by(Actual) %>%
+  mutate(Proportion = Count / sum(Count))
+
+predictions
+```
+
+```{r}
+correct_only <- predictions %>%
+  filter(Actual == Predicted)
+```
+
+## Heatmap
+
+```{r}
+predictions %>%
+  ggplot(aes(
+    x = Actual,
+    y = Predicted,
+    fill = Proportion
+  )) +
+  
+  # yellow for correct
+  geom_tile(
+    data = correct_only,
+    aes(
+      x = Actual,
+      y = Predicted
+    ),
+    fill = yellow,
+    inherit.aes = FALSE
+  ) +
+  
+  geom_tile(aes(width = 0.8)) +
+  geom_text(
+    aes(
+      color = Proportion,
+      label = paste0(round(Proportion * 100, digits = 0), "%")),
+    nudge_x = -0.35, hjust = 0, fontface = "bold", size = 3
+  ) +
+  
+  labs(
+    title = "Furry Favorability Predictions"
+  ) +
+  
+  scale_fill_gradient(low = lo_prop, high = pink_hi_prop) +
+  scale_color_gradient(low = pink_lo_prop_text, high = pink_hi_prop_txt) +
+  
+  my_theme +
+  theme(
+    plot.title = element_text(size = 14)
+  )
+```
+
+```{r}
+ggsave("true_vs_predicted.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+# Favorability Score Distributions
+
+## Wrangle
+
+```{r}
+survey2 <- survey %>%
+  drop_na(Homophobia_cat, Furry_unfavorability_cat) %>%
+  mutate(across(
+    c(
+      Furry_unfavorability_cat,
+      Homophobia_cat,
+      Transphobia_cat
+    ), 
+    \(x) factor(case_match(
+      x,
+      1 ~ favorability_levels[1],
+      2 ~ favorability_levels[2],
+      3 ~ favorability_levels[3],
+      4 ~ favorability_levels[4]
+    ),
+    levels = favorability_levels,
+    ordered = TRUE)
+  ))
+```
+
+## Bar Plots
+
+```{r}
+survey2 %>%
+  ggplot(aes(Furry_unfavorability_cat)) +
+  geom_bar(fill = pink) +
+  
+  labs(
+    title = "Attitude on furries"
+  ) +
+  
+  my_theme + 
+  theme(
+    axis.text.y = element_text(size = 10),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 12),
+    plot.title = element_text(
+      size = 17
+    )
+  )
+```
+
+```{r}
+ggsave("dist_furry.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+```{r}
+survey2 %>%
+  ggplot(aes(Homophobia_cat)) +
+  geom_bar(fill = green) +
+  
+  labs(
+    title = "Attitude on sexual orientation"
+  ) +
+  
+  my_theme + 
+  theme(
+    axis.text.y = element_text(size = 10),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 12),
+    plot.title = element_text(
+      size = 17, color = green
+    )
+  )
+```
+
+```{r}
+ggsave("dist_orient.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+```{r}
+survey2 %>%
+  ggplot(aes(Transphobia_cat)) +
+  geom_bar(fill = cyan) +
+  
+  labs(
+    title = "Attitude on gender identity"
+  ) +
+  
+  my_theme + 
+  theme(
+    axis.text.y = element_text(size = 10),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 12),
+    plot.title = element_text(
+      size = 17, color = cyan
+    )
+  )
+```
+
+```{r}
+ggsave("dist_gender.png", 
+       width = 4, height = 3, dpi = my_dpi, bg = "transparent")
+```
+
+# All Question Distributions
+
+## Favorability Questions
+
+```{r}
+prefixes = c(
+  "Furry-", "Homop-", "Trans-"
+)
+# prefixes
+
+question_names <- colnames(survey)
+question_names <- str_subset(
+  question_names, paste0("^", prefixes, collapse = "|")
+)
+# question_names
+
+for (col in question_names) {
+  survey %>%
+    ggplot(aes(.data[[col]])) +
+    geom_bar(fill = pink) +
+    
+    labs(
+      title = col
+    ) +
+    
+    my_theme + 
+    theme(
+      axis.text.x = element_text(size = 2),
+      axis.text.y = element_text(size = 2),
+      axis.title.x = element_blank(),
+      axis.title.y = element_text(size = 2),
+      plot.title = element_text(
+        size = 3, color = pink
+      )
+    )
+  
+  ggsave(paste0("question_distributions/", col, ".png"), 
+         width = 4, height = 3, dpi = 100, bg = "transparent")
+}
+```
+
+## Supplemental questions
+
+```{r}
+question_names <- c(
+  "Perc_guess",
+  "Furry_id", "Heterosexual_id", "Transgender+_id",
+  "Homophobic_id", "Transphobic_id",
+  "Politics",
+  "Location", "Medium"
+)
+# question_names
+
+for (col in question_names) {
+  survey %>%
+    ggplot(aes(.data[[col]])) +
+    geom_bar(fill = pink) +
+    
+    labs(
+      title = col
+    ) +
+    
+    my_theme + 
+    theme(
+      axis.text.x = element_text(size = 2, angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 2),
+      axis.title.x = element_blank(),
+      axis.title.y = element_text(size = 2),
+      plot.title = element_text(
+        size = 3, color = pink
+      )
+    )
+  
+  ggsave(paste0("question_distributions/", col, ".png"), 
+         width = 4, height = 3, dpi = 100, bg = "transparent")
+}
+```
+
+# Raw Favorability Distributions
+
+Final favorability score thresholds for visualization of cutoffs
+```{r}
+# Category 1, Highly favorable : [1 - t1)
+t1 = 1.5
+# Category 2, Moderately favorable : [t1 - t2)
+t2 = 2.5
+# Category 3, Ambivalent or neutral : [t2 - t3)
+t3 = 3.5
+# Category 4, Unfavorable : [t3 - 5]
+```
+
+```{r}
+survey %>%
+  ggplot(aes(Furry_unfavorability_raw)) +
+  geom_density(
+    bw = 0.15,
+    fill = pink, color = pink
+  ) +
+  
+  geom_vline(
+    xintercept = c(t1, t2, t3),
+    linetype = "dotted",
+    color = pink_dark,
+    linewidth = 1
+  ) +
+  
+  ylim(0, 1) +
+  xlim(1, 5) +
+  
+  labs(
+    title = "Raw Furry"
+  ) +
+  
+  my_theme + 
+  theme(
+    axis.text.x = element_text(size = 2),
+    axis.text.y = element_text(size = 2),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 2),
+    plot.title = element_text(
+      size = 2.5, color = pink
+    )
+  )
+```
+
+```{r}
+ggsave("dist_raw_furry.png", 
+       width = 4, height = 3, dpi = 100, bg = "transparent")
+```
+
+```{r}
+survey %>%
+  ggplot(aes(Homophobia_raw)) +
+  geom_density(
+    bw = 0.15,
+    fill = green, color = green
+  ) +
+  
+  geom_vline(
+    xintercept = c(t1, t2, t3),
+    linetype = "dotted",
+    color = pink_dark,
+    linewidth = 1
+  ) +
+  
+  ylim(0, 1) +
+  xlim(1, 5) +
+  
+  labs(
+    title = "Raw Sexual Orientation"
+  ) +
+  
+  my_theme + 
+  theme(
+    axis.text.x = element_text(size = 2),
+    axis.text.y = element_text(size = 2),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 2),
+    plot.title = element_text(
+      size = 2.5, color = pink
+    )
+  )
+```
+
+```{r}
+ggsave("dist_raw_orient.png", 
+       width = 4, height = 3, dpi = 100, bg = "transparent")
+```
+
+```{r}
+survey %>%
+  ggplot(aes(Transphobia_raw)) +
+  geom_density(
+    bw = 0.15,
+    fill = cyan, color = cyan
+  ) +
+  
+  geom_vline(
+    xintercept = c(t1, t2, t3),
+    linetype = "dotted",
+    color = pink_dark,
+    linewidth = 1
+  ) +
+  
+  ylim(0, 1) +
+  xlim(1, 5) +
+  
+  labs(
+    title = "Raw Gender Identity"
+  ) +
+  
+  my_theme + 
+  theme(
+    axis.text.x = element_text(size = 2),
+    axis.text.y = element_text(size = 2),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 2),
+    plot.title = element_text(
+      size = 2.5, color = pink
+    )
+  )
+```
+
+```{r}
+ggsave("dist_raw_gender.png", 
+       width = 4, height = 3, dpi = 100, bg = "transparent")
+```
+
